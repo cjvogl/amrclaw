@@ -43,13 +43,14 @@ c            mptr = listgrids(jg)
             node(storeflags,mptr) = locamrflags
           end do
 
-!$OMP PARALLEL DO PRIVATE(jg,mptr,nx,ny,mitot,mjtot,locnew,locaux),
+!$OMP PARALLEL DO PRIVATE(levSt,jg,mptr,nx,ny,mitot,mjtot,locnew,locaux),
 !$OMP&            PRIVATE(time,dx,dy,xleft,ybot,xlow,ylow,locbig),
 !$OMP&            PRIVATE(locold,mbuff,mibuff,mjbuff,locamrflags,i),
 !$OMP&            PRIVATE(locuse),
 !$OMP&            SHARED(numgrids,listgrids,lcheck,nghost,nvar,naux),
 !$OMP&            SHARED(tolsp,alloc,node,rnode,hxposs,hyposs,ibuff),
 !$OMP&            SHARED(start_time,possk,flag_gradient,flag_richardson)
+!$OMP&            SHARED(listStart,listOfgrids)
 !$OMP&            DEFAULT(none),
 !$OMP&            SCHEDULE(DYNAMIC,1)
        do  jg = 1, numgrids(lcheck)

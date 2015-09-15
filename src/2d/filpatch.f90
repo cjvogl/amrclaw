@@ -13,7 +13,7 @@
 ! :::::::::::::::::::::::::::::::::::::::;:::::::::::::::::::::::;
 !
 recursive subroutine filrecur(level,nvar,valbig,aux,naux,t,mitot,mjtot, &
-     nrowst,ncolst,ilo,ihi,jlo,jhi,patchOnly)
+     nrowst,ncolst,ilo,ihi,jlo,jhi,patchOnly,msrc)
 
   use amr_module, only: hxposs, hyposs, xlower, ylower, xupper, yupper
   use amr_module, only: outunit, nghost, xperdom, yperdom, spheredom
@@ -26,7 +26,7 @@ recursive subroutine filrecur(level,nvar,valbig,aux,naux,t,mitot,mjtot, &
 
   ! Input
   integer, intent(in) :: level, nvar, naux, mitot, mjtot, nrowst, ncolst
-  integer, intent(in) :: ilo,ihi,jlo,jhi
+  integer, intent(in) :: ilo,ihi,jlo,jhi, msrc
   real(kind=8), intent(in) :: t
   logical  :: patchOnly
 
@@ -42,7 +42,7 @@ recursive subroutine filrecur(level,nvar,valbig,aux,naux,t,mitot,mjtot, &
   integer :: unset_indices(4)
   real(kind=8) :: dx_fine, dy_fine, dx_coarse, dy_coarse
   real(kind=8) :: xlow_coarse,ylow_coarse, xlow_fine, ylow_fine, xhi_fine,yhi_fine
-  real(kind=8) :: xcent_fine, xcent_coarse, ycent_fine, ycent_coarse    
+  real(kind=8) :: xcent_fine, xcent_coarse, ycent_fine, ycent_coarse,ratiox,ratioy,floor    
 
   !for timing
   integer :: clock_start, clock_finish, clock_rate
@@ -86,8 +86,12 @@ recursive subroutine filrecur(level,nvar,valbig,aux,naux,t,mitot,mjtot, &
   ylow_fine = ylower + jlo * dy_fine
 
   ! Fill in the patch as much as possible using values at this level
+  ! note that if only a patch, msrc = -1, otherwise a real grid and intfil
+  ! uses its boundary list
+  ! msrc either -1 (for a patch) or the real grid number
   call intfil(valbig,mitot,mjtot,t,flaguse,nrowst,ncolst, ilo,  &
-              ihi,jlo,jhi,level,nvar,naux)
+              ihi,jlo,jhi,level,nvar,naux,msrc)
+ 
 
 
   ! Trimbd returns set = true if all of the entries are filled (=1.).
@@ -189,27 +193,40 @@ recursive subroutine filrecur(level,nvar,valbig,aux,naux,t,mitot,mjtot, &
              iplo,iphi,jplo,jphi,iplo,iphi,jplo,jphi,.true.)
      else
         call filrecur(level-1,nvar,valcrse,auxcrse,naux,t,mitot_coarse,mjtot_coarse,1,1,   &
-             iplo,iphi,jplo,jphi,.true.)
+             iplo,iphi,jplo,jphi,.true.,-1)  ! when going to coarser patch, no source grid (for now at least)
      endif
 
+     ! convert to real for use below
+     ratiox = float(refinement_ratio_x)
+     ratioy = float(refinement_ratio_y)
+
      do i_fine = 1,mitot_patch
-        i_coarse = 2 + (i_fine - (unset_indices(1) - ilo) - 1) / refinement_ratio_x
+        !i_coarse = 2 + (i_fine - (unset_indices(1) - ilo) - 1) / refinement_ratio_x
         !eta1 = (-0.5d0 + real(mod(i_fine - 1, refinement_ratio_x),kind=8)) &
         !                    / real(refinement_ratio_x,kind=8)
 
-
+        ! new coarse indexing
+        !i_coarse =(i_fine+ilo-1)/refinement_ratio_x - iplo + 1
+        i_coarse = floor((i_fine+ilo-1)/ratiox) - iplo + 1
         xcent_coarse = xlow_coarse + (i_coarse-.5d0)*dx_coarse
         xcent_fine =  xlower + (i_fine-1+ilo + .5d0)*dx_fine
         eta1 = (xcent_fine-xcent_coarse)/dx_coarse
+        if (abs(eta1) .gt. .5) then
+          write(*,*)" filpatch x indices wrong: eta1 = ",eta1
+        endif
 
         do j_fine  = 1,mjtot_patch
            j_coarse = 2 + (j_fine - (unset_indices(3) - jlo) - 1) / refinement_ratio_y
            !eta2 = (-0.5d0 + real(mod(j_fine - 1, refinement_ratio_y),kind=8)) &
            !                    / real(refinement_ratio_y,kind=8)
 
+           j_coarse =floor((j_fine+jlo-1)/ratioy) - jplo + 1
            ycent_coarse = ylow_coarse + (j_coarse-.5d0)*dy_coarse
            ycent_fine =  ylower + (j_fine-1+jlo + .5d0)*dy_fine
            eta2 = (ycent_fine-ycent_coarse)/dy_coarse
+           if (abs(eta2) .gt. .5) then
+             write(*,*)" filpatch y indices wrong: eta2 = ",eta2
+           endif
 
            if (flaguse(i_fine,j_fine) == 0) then
 
