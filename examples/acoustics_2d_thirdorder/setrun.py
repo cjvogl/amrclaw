@@ -74,11 +74,11 @@ def setrun(claw_pkg='amrclaw'):
     # Number of grid cells:
 
 #    clawdata.num_cells[0] = 43   # 4265, 2875  14.7%
-                                  # 4785, 3225
+                                  # 4785, 3225  4.3%
     clawdata.num_cells[0] = 86   # 4751, 3205  4.98%
-                                  # 4977, 3351
+                                  # 4977, 3351  0.46%
 #    clawdata.num_cells[0] = 172  # 4914, 3310  1.72%
-#    clawdata.num_cells[0] = 344
+#    clawdata.num_cells[0] = 344  # 4972, 3345  0.56%
 
     clawdata.num_cells[1] = int(np.floor(0.25*clawdata.num_cells[0]))
 
