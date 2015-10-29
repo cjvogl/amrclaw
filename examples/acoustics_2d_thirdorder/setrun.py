@@ -74,8 +74,9 @@ def setrun(claw_pkg='amrclaw'):
     # Number of grid cells:
 
 #    clawdata.num_cells[0] = 43   # 4265, 2875  14.7%
-#    clawdata.num_cells[0] = 86   # 4751, 3205  4.98%
-    clawdata.num_cells[0] = 172  # 4914, 3310  1.72%
+                                  # 4785, 3225
+    clawdata.num_cells[0] = 86   # 4751, 3205  4.98%
+#    clawdata.num_cells[0] = 172  # 4914, 3310  1.72%
 #    clawdata.num_cells[0] = 344
 
     clawdata.num_cells[1] = int(np.floor(0.25*clawdata.num_cells[0]))
@@ -188,7 +189,7 @@ def setrun(claw_pkg='amrclaw'):
     # ------------------
 
     # Order of accuracy:  1 => Godunov,  2 => Lax-Wendroff plus limiters
-    clawdata.order = 2
+    clawdata.order = 3
 
     # Use dimensional splitting? (not yet available for AMR)
     clawdata.dimensional_split = 'unsplit'
@@ -211,7 +212,7 @@ def setrun(claw_pkg='amrclaw'):
     #   2 or 'superbee' ==> superbee
     #   3 or 'vanleer'  ==> van Leer
     #   4 or 'mc'       ==> MC limiter
-    clawdata.limiter = ['vanleer','vanleer']
+    clawdata.limiter = ['none','none']
 
     clawdata.use_fwaves = False    # True ==> use f-wave version of algorithms
 
