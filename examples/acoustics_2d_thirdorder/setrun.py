@@ -76,6 +76,7 @@ def setrun(claw_pkg='amrclaw'):
 #    clawdata.num_cells[0] = 43   # 4265, 2875  14.7%
                                   # 4785, 3225
     clawdata.num_cells[0] = 86   # 4751, 3205  4.98%
+                                  # 4977, 3351
 #    clawdata.num_cells[0] = 172  # 4914, 3310  1.72%
 #    clawdata.num_cells[0] = 344
 
