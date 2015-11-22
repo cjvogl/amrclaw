@@ -193,7 +193,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.order = 3
 
     # Use dimensional splitting? (not yet available for AMR)
-    clawdata.dimensional_split = 'unsplit'
+    clawdata.dimensional_split = 'godunov'
 
     # For unsplit method, transverse_waves can be
     #  0 or 'none'      ==> donor cell (only normal solver used)

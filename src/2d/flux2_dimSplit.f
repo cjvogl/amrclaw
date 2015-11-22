@@ -141,6 +141,17 @@ c
 
                cqxx(m,i) = cqxx(m,i) + abs_sign
      &             * (1.d0 - dabs(s(mw,i))*dtdxave) * wave(m,mw,i)
+
+               if (method(2).eq.3) then
+                if (s(mw,i) .gt. 0.d0) then
+                    dq2 = wave(m,mw,i) - wave(m,mw,i-1)
+                else
+                    dq2 = wave(m,mw,i+1) - wave(m,mw,i)
+                end if
+                cqxx(m,i) = cqxx(m,i) - s(mw,i)/3.d0 *
+     &                      (1.d0 - (s(mw,i)*dtdxave)**2) * dq2
+               end if
+
 c
   119          continue
             faddm(m,i) = faddm(m,i) + 0.5d0 * cqxx(m,i)
