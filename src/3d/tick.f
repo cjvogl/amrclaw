@@ -7,6 +7,7 @@ c
       use amr_module
       use gauges_module, only: setbestsrc, num_gauges
       use gauges_module, only: print_gauges_and_reset_nextloc
+      use slices_module, only: num_slices, print_slices
 
       implicit double precision (a-h,o-z)
 
@@ -117,7 +118,7 @@ c        write(*,*)" old possk is ", possk(1)
          diffdt = oldposs - possk(1)  ! if positive new step is smaller
 
 
-         if (.false.) then  
+         if (.false.) then
             write(*,122) diffdt,outtime  ! notify of change
  122        format(" Adjusting timestep by ",e10.3,
      .             " to hit output time of ",e12.6)
@@ -190,15 +191,15 @@ c level 'lbase' stays fixed.
 c
           if (rprint) write(outunit,101) lbase
 101       format(8h  level ,i5,32h  stays fixed during regridding )
-          
+
           call system_clock(clock_start,clock_rate)
           call cpu_time(cpu_start)
           call regrid(nvar,lbase,cut,naux,start_time)
           call system_clock(clock_finish,clock_rate)
           call cpu_time(cpu_finish)
           timeRegridding = timeRegridding + clock_finish - clock_start
-          timeRegriddingCPU=timeRegriddingCPU+cpu_finish-cpu_start 
-          
+          timeRegriddingCPU=timeRegriddingCPU+cpu_finish-cpu_start
+
           call setbestsrc()     ! need at every grid change
 c         call outtre(lstart(lbase+1),.true.,nvar,naux)
 c note negative time to signal regridding output in plots
@@ -220,7 +221,7 @@ c          MJB: modified to check level where new grids start, which is lbase+1
                  do levnew = lbase+1,lfine
                      write(6,1006) intratx(levnew-1),intraty(levnew-1),
      &                             kratio(levnew-1),levnew
- 1006                format('   Refinement ratios...  in x:', i3, 
+ 1006                format('   Refinement ratios...  in x:', i3,
      &                 '  in y:',i3,'  in t:',i3,' for level ',i4)
                  end do
 
@@ -308,21 +309,25 @@ c         find new dt for next cycle (passed back from integration routine).
                  dtnew(ii) = min(dtnew(ii),dtnew(ii+1)*kratio(ii))
  115     continue
 c          make sure not to exceed largest permissible dt
-           dtnew(1) = min(dtnew(1),dt_max)  
+           dtnew(1) = min(dtnew(1),dt_max)
            possk(1) = dtnew(1)    ! propagate new timestep to hierarchy
          do 120 i = 2, mxnest
  120       possk(i) = possk(i-1) / kratio(i-1)
 
       endif
 
-       if ((abs(checkpt_style).eq.3 .and. 
+       if ((abs(checkpt_style).eq.3 .and.
      &      mod(ncycle,checkpt_interval).eq.0) .or. dumpchk) then
           call check(ncycle,time,nvar,naux)
                 dumpchk = .true.
        endif
 
        if ((mod(ncycle,iout).eq.0) .or. dumpout) then
-          call valout(1,lfine,time,nvar,naux)
+          if (num_slices .gt. 0) then
+            call print_slices(1,lfine,time,nvar,naux)
+          else
+            call valout(1,lfine,time,nvar,naux)
+          end if
           if (printout) call outtre(mstart,.true.,nvar,naux)
        endif
 
@@ -349,9 +354,13 @@ c
               dump_final = (tout(nout).eq.tfinal)
               endif
           endif
-      
+
       if (dump_final) then
-          call valout(1,lfine,time,nvar,naux)
+          if (num_slices .gt. 0) then
+            call print_slices(1,lfine,time,nvar,naux)
+          else
+            call valout(1,lfine,time,nvar,naux)
+          end if
           if (printout) call outtre(mstart,.true.,nvar,naux)
       endif
 
